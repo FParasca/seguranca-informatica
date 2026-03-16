@@ -1,0 +1,14 @@
+/*
+encripta os ficheiros
+nao fala com o servidor
+carregas as keystores
+
+o que fazer
+Secretkey gerenatekey
+void encryptfile 
+void decrypt
+void decryptkey
+void signfile
+bool verifyfile
+
+ */
