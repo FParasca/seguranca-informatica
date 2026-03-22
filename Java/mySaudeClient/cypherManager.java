@@ -1,13 +1,16 @@
 import java.io.*;
 import java.security.*;
+import java.security.cert.Certificate;
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+
 public class CypherManager {
-    private String username;
-    private char[] password;
+    final String username;
+    final char[] password;
     private KeyStore keyStore;
 
     public CypherManager(String username, String password) throws Exception {
@@ -44,13 +47,13 @@ public class CypherManager {
         cos = new CipherOutputStream(fos, c);
         
 
-        byte[] b = new byte[16];  
+        byte[] b = new byte[2048];  
         int i = fis.read(b);
         while (i != -1) {
             cos.write(b, 0, i);
             i = fis.read(b);
         }
-        java.security.cert.Certificate cert = keyStore.getCertificate(targetUser);
+        Certificate cert = keyStore.getCertificate(targetUser);
         if (cert == null) {
             cos.close();
             fis.close();
@@ -88,5 +91,60 @@ public class CypherManager {
         filesign.close();
         myfile.close();
     }
+
+    public void decryptFile(String fileName) throws Exception {
+        String baseName = fileName.replace(".cifrado", "").replace(".envelope", "");
+        String keyPath = baseName + ".chave." + this.username;
+        byte[] keyEncoded = new byte[256];
+        FileInputStream kos = new FileInputStream(keyPath);
+        kos.read(keyEncoded);
+        
+        PrivateKey pkey = (PrivateKey) keyStore.getKey(this.username, this.password);
+        Cipher c2 = Cipher.getInstance("RSA");
+        c2.init(Cipher.UNWRAP_MODE, pkey);
+
+        SecretKey keySpec2 = (SecretKey) c2.unwrap(keyEncoded, "AES", Cipher.SECRET_KEY);
+        kos.close();
+
+        Cipher c = Cipher.getInstance("AES");
+        c.init(Cipher.DECRYPT_MODE, keySpec2);
+        FileInputStream fis = new FileInputStream(fileName);
+        FileOutputStream fos = new FileOutputStream(baseName);
+
+        CipherInputStream cis = new CipherInputStream(fis, c);
+        byte[] b = new byte[1024];  
+        int i = cis.read(b);
+        while (i != -1) {
+            fos.write(b, 0, i);
+            i = cis.read(b);
+        }
+
+        cis.close();
+        fis.close();
+        fos.close();
+    }
+
+    public boolean verifySignature(String fileName, String signer) throws Exception {
+
+        Certificate cert = keyStore.getCertificate(signer);
+        Signature s = Signature.getInstance("SHA256withRSA");
+        s.initVerify(cert);
+
+        FileInputStream myfile = new FileInputStream(fileName);
+        byte[] b = new byte[2048];
+        int i = myfile.read(b);
+        while(i != -1) {
+            s.update(b, 0 ,i);
+            i = myfile.read(b);
+        }
+        byte[] assinatura = new byte[256];   
+        FileInputStream filesign = new FileInputStream(fileName + ".assinatura." + signer);
+        filesign.read(assinatura);
+        filesign.close();
+        myfile.close();
+        boolean res = s.verify(assinatura);
+        return res;
+    }
+
 }
 

@@ -74,6 +74,14 @@ public class TerminalHandler {
         }
     }
     private void handleDecrypt() {
+        try {
+            CypherManager cm = new CypherManager(username, password);
+            for (String file : files) {
+                cm.decryptFile(file); 
+            }
+        } catch (Exception e) {
+            System.err.println("Error during decryption: " + e.getMessage());
+        }
     }
     private void handleSign() {
         try {
@@ -86,6 +94,14 @@ public class TerminalHandler {
         }
     }
     private void handleVerify() {
+        try {
+            CypherManager cm = new CypherManager(username, password);
+            for (String file : files) {
+                cm.verifySignature(file, target);
+            }
+        } catch (Exception e) {
+            System.err.println("Error during signature verification: " + e.getMessage());
+        }
     }
 
 }    
