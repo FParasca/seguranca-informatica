@@ -1,3 +1,5 @@
+package mySaudeClient;
+
 import java.io.*;
 import java.security.*;
 import java.security.cert.Certificate;
@@ -8,12 +10,12 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 
-public class CypherManager {
+public class cypherManager {
     final String username;
     final char[] password;
     private KeyStore keyStore;
 
-    public CypherManager(String username, String password) throws Exception {
+    public cypherManager(String username, String password) throws Exception {
         this.username = username;
         this.password = password.toCharArray();
         loadKeyStore();

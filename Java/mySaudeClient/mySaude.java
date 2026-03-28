@@ -1,13 +1,11 @@
-/*
-so recebe os argumentos e chama funcoes
-"main"
-so tem public static void main(String[] args)
-*/
+package mySaudeClient;
+
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MySaude {
+public class mySaude {
     public static void main(String[] args) {
         String serverAddr = null; 
         String username = null;   
@@ -53,6 +51,8 @@ public class MySaude {
                 }
             }
         }
-        TerminalHandler handler = new TerminalHandler(serverAddr, username, password, target, command, files);
+        terminalHandler handler = new terminalHandler(serverAddr, username, password, target, command, files);
+        handler.execute();
+        //executar o objeto, tava a dar erro sem executar 
     }
 }
