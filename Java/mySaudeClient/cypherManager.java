@@ -1,8 +1,12 @@
 package mySaudeClient;
 
-import java.io.*;
-import java.security.*;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.Signature;
 import java.security.cert.Certificate;
+
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
@@ -10,12 +14,12 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 
-public class cypherManager {
+public class CypherManager {
     final String username;
     final char[] password;
     private KeyStore keyStore;
 
-    public cypherManager(String username, String password) throws Exception {
+    public CypherManager(String username, String password) throws Exception {
         this.username = username;
         this.password = password.toCharArray();
         loadKeyStore();
@@ -95,6 +99,9 @@ public class cypherManager {
     }
 
     public void decryptFile(String fileName) throws Exception {
+        if (!fileName.endsWith(".cifrado") && !fileName.endsWith(".envelope")) {
+            fileName = fileName + ".cifrado";
+        }
         String baseName = fileName.replace(".cifrado", "").replace(".envelope", "");
         String keyPath = baseName + ".chave." + this.username;
         byte[] keyEncoded = new byte[256];

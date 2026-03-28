@@ -5,7 +5,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class mySaude {
+public class MySaude {
     public static void main(String[] args) {
         String serverAddr = null; 
         String username = null;   
@@ -51,7 +51,7 @@ public class mySaude {
                 }
             }
         }
-        terminalHandler handler = new terminalHandler(serverAddr, username, password, target, command, files);
+        TerminalHandler handler = new TerminalHandler(serverAddr, username, password, target, command, files);
         handler.execute();
         //executar o objeto, tava a dar erro sem executar 
     }

@@ -4,12 +4,12 @@ import java.util.List;
 import java.io.File;
 import java.util.ArrayList;
 
-public class terminalHandler {
+public class TerminalHandler {
     private String serverAddr, username, password, target, command;
     private List<String> files;
     private List<String> sendfiles;
 
-    public terminalHandler(String s, String u, String p, String t, String c, List<String> f) {
+    public TerminalHandler(String s, String u, String p, String t, String c, List<String> f) {
         this.serverAddr = s;
         this.username = u;
         this.password = p;
@@ -36,7 +36,7 @@ public class terminalHandler {
                 break;
 
             case "-ace":
-                handleSign();
+                handleSign(false);
                 handleEncrypt(true);
                 handleSend();
                 break;
@@ -66,7 +66,7 @@ public class terminalHandler {
 	    try {
 	        System.out.println("1. a entrar no handleSend");
 
-	        serverConnec sc = new serverConnec(serverAddr);
+	        ServerConnec sc = new ServerConnec(serverAddr);
 	        System.out.println("2. ligou ao servidor");
 
 	        sc.sendUser(command,username, target);
@@ -88,19 +88,44 @@ public class terminalHandler {
 	}
    private void handleReceive() {
 	    try {
-	        serverConnec sc = new serverConnec(serverAddr);
+	        ServerConnec sc = new ServerConnec(serverAddr);
 	        sc.sendUser(command, username, username);
-	        
+
+	        List<String> toRequest = new ArrayList<>();
 	        for (String file : files) {
-	            File localFile = new File(file);
-	            if (localFile.exists()) {
-	                System.err.println("Error: ficheiro '" + file + "' já existe localmente");
-	                continue;
-	            }
-	            sc.requestFile(file);
-	            sc.receiveFile(file);
-	        }
-	        
+            switch (command) {
+                case "-rdv":
+                    toRequest.add(file + ".envelope");
+                    toRequest.add(file + ".assinatura." + target);
+                    toRequest.add(file + ".chave." + username);
+                    break;
+
+                case "-rd":
+                    toRequest.add(file + ".cifrado");
+                    toRequest.add(file + ".chave." + username);
+                    break;
+
+                case "-rv":
+                    toRequest.add(file);
+                    toRequest.add(file + ".assinatura." + target);
+                    break;
+
+                default:
+                    toRequest.add(file);
+                    break;
+            }
+            for (String fileToGet : toRequest) {
+                File localFile = new File(fileToGet);
+                
+                if (localFile.exists()) {
+                    System.err.println("Erro: ficheiro '" + fileToGet + "' já existe localmente");
+                    continue;
+                }
+
+                sc.requestFile(fileToGet);
+                sc.receiveFile(fileToGet);
+            }
+	    }
 	        sc.close();
 	    } catch (Exception e) {
 	        System.err.println("Error during receive: " + e.getMessage());
@@ -111,7 +136,7 @@ public class terminalHandler {
     }
     private void handleEncrypt(boolean ace) {
         try {
-            cypherManager cm = new cypherManager(username, password);
+            CypherManager cm = new CypherManager(username, password);
             for (String file : files) {
                 cm.encryptFile(file, target, ace); 
                 String extension = ace ? ".envelope" : ".cifrado";
@@ -124,32 +149,48 @@ public class terminalHandler {
     }
     private void handleDecrypt() {
         try {
-            cypherManager cm = new cypherManager(username, password);
+            CypherManager cm = new CypherManager(username, password);
             for (String file : files) {
-                cm.decryptFile(file); 
+                if (command.equals("-rdv")) {
+                    cm.decryptFile(file + ".envelope");
+                } else {
+                    cm.decryptFile(file);
+                }
             }
         } catch (Exception e) {
             System.err.println("Error during decryption: " + e.getMessage());
         }
     }
     private void handleSign() {
+        handleSign(true);
+    }
+    private void handleSign(boolean ace) {
         try {
-            cypherManager cm = new cypherManager(username, password);
+            CypherManager cm = new CypherManager(username, password);
             for (String file : files) {
                 cm.signFile(file);
-                sendfiles.add(file);
-                sendfiles.add(file + ".assinatura." + this.username);
+                if (ace){
+                    sendfiles.add(file);
+                }
+                    sendfiles.add(file + ".assinatura." + this.username);
             }
+
         } catch (Exception e) {
             System.err.println("Error during signing: " + e.getMessage());
         }
     }
     private void handleVerify() {
         try {
-            cypherManager cm = new cypherManager(username, password);
+            CypherManager cm = new CypherManager(username, password);
             for (String file : files) {
-                cm.verifySignature(file, target);
+                boolean isValid = cm.verifySignature(file, target);
+                if (isValid) {
+                    System.out.println("Assinatura de '" + target + "' para o ficheiro '" + file + "' é VÁLIDA.");
+                } else {
+                    System.err.println("AVISO: Assinatura de '" + target + "' INVÁLIDA para o ficheiro '" + file + "'.");
+                }
             }
+            
         } catch (Exception e) {
             System.err.println("Error during signature verification: " + e.getMessage());
         }

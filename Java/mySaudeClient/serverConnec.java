@@ -1,11 +1,16 @@
 package mySaudeClient;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
-public class serverConnec {
+public class ServerConnec {
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
-    public serverConnec(String serverAddr) throws Exception {
+    public ServerConnec(String serverAddr) throws Exception {
         String[] parts = serverAddr.split(":");
         this.socket = new Socket(parts[0], Integer.parseInt(parts[1]));
         this.out = new ObjectOutputStream(socket.getOutputStream());
